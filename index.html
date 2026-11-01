@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#147d48">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
+<meta name="description" content="VENGADESH MILK SALES - offline milk sales and collection manager">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<title>VENGADESH MILK SALES</title>
+<style>
+:root{--green:#147d48;--bg:#f4f7f5;--card:#fff;--text:#17221b;--muted:#66756b;--line:#dce5de}
+*{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,"Noto Sans Tamil",sans-serif;background:var(--bg);color:var(--text)}
+header{background:var(--green);color:white;padding:18px 16px} header h1{margin:0;font-size:22px}header p{margin:4px 0 0;font-size:13px;opacity:.9}
+main{max-width:1000px;margin:auto;padding:14px}
+.tabs{display:flex;gap:8px;overflow:auto;margin-bottom:14px}
+.tabs button{border:1px solid var(--line);background:white;border-radius:22px;padding:10px 16px;white-space:nowrap;font-weight:600}
+.tabs button.active{background:var(--green);color:white;border-color:var(--green)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px;box-shadow:0 2px 6px #132b1710}
+h2{font-size:18px;margin:0 0 12px}h3{font-size:15px;margin:12px 0 8px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}.field{flex:1;min-width:120px}
+label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px}
+input,select{width:100%;padding:11px;border:1px solid #cbd7ce;border-radius:9px;background:white;font-size:16px;color:var(--text)}
+button.primary{background:var(--green);color:white;border:0;border-radius:9px;padding:11px 15px;font-weight:700}
+button.secondary{background:#edf4ef;color:var(--green);border:1px solid #c8ddce;border-radius:9px;padding:10px 13px;font-weight:600}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.stat{background:#edf5ef;border-radius:10px;padding:12px}.stat b{font-size:20px;display:block}.stat span{font-size:12px;color:var(--muted)}
+table{width:100%;border-collapse:collapse;font-size:14px}td,th{padding:9px 6px;border-bottom:1px solid var(--line);text-align:right}td:first-child,th:first-child{text-align:left}th{color:var(--muted);font-weight:600}
+.qty{max-width:85px;text-align:center;padding:8px}.total{font-weight:800;color:var(--green)}
+.shopgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.shop{border:1px solid var(--line);border-radius:10px;padding:10px;background:#fff}.shop strong{display:block}.shop small{color:var(--muted)}
+.calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}.dayname{text-align:center;color:var(--muted);font-size:11px;padding:5px 0}.day{border:1px solid var(--line);border-radius:7px;background:white;min-height:48px;padding:5px;font-size:12px}.day.selected{background:#d9f0e0;border-color:var(--green);font-weight:800}.day.hasdata:after{content:"•";display:block;color:var(--green);font-size:18px;line-height:10px}
+.hidden{display:none!important}.muted{color:var(--muted);font-size:13px}.danger{color:#a33333}.full{width:100%}
+@media(max-width:560px){.stats{grid-template-columns:1fr 1fr}.shopgrid{grid-template-columns:1fr}.field{min-width:100px}.card{padding:11px}table{font-size:12px}.qty{max-width:65px;padding:7px}}
+
+@media print{
+ body{background:#fff;color:#000}header,.tabs,main>section:not(#report),#report>.card:not(#analysisCard),#analysisCard .row,#analysisCard>p{display:none!important}
+ main{max-width:none;padding:0}#report{display:block!important}#analysisCard{display:block!important;border:0;box-shadow:none;padding:0;margin:0}
+ #analysisOutput{display:block!important}#analysisOutput table{font-size:11px}#analysisOutput th,#analysisOutput td{border:1px solid #777;padding:6px;color:#000}
+ .print-title{display:block!important} .no-print{display:none!important}
+}
+</style>
+</head>
+<body>
+<header><h1>🥛 VENGADESH MILK SALES</h1><p>Unlimited கடைகள் · தினசரி கணக்கு · வார & மாத அறிக்கை</p></header>
+<main>
+<div id="installBanner" class="card hidden" style="margin-bottom:12px"><strong>📲 VENGADESH MILK SALES App நிறுவவும்</strong><p class="muted">இந்த மொபைலில் தனி App போல நிறுவ கீழே அழுத்துங்கள்.</p><button class="primary" id="installBtn">Install App</button></div>
+<div class="tabs">
+<button class="active" data-tab="entry">📝 தினசரி பதிவு</button>
+<button data-tab="report">📊 அறிக்கை</button>
+<button data-tab="shops">🏪 கடைகள் & பாக்கி</button>
+<button data-tab="settings">⚙️ பால் விலை</button>
+</div>
+
+<section id="entry">
+<div class="card">
+<div class="row">
+<div class="field"><label>தேதி</label><input type="date" id="date"></div>
+<div class="field"><label>கடை</label><select id="shopSelect"></select></div>
+</div>
+<h3>இன்று கொடுத்த பால் எண்ணிக்கை</h3>
+<table><thead><tr><th>பால் வகை</th><th>விலை (₹)</th><th>எண்ணிக்கை</th><th>தொகை</th></tr></thead>
+<tbody id="productRows"></tbody></table>
+<div class="row" style="justify-content:space-between;margin-top:12px"><span>இந்த கடையின் மொத்தம்</span><strong class="total" id="entryTotal">₹0</strong></div>
+<button class="primary full" id="saveBtn" style="margin-top:12px">💾 கணக்கை சேமிக்கவும்</button>
+<p class="muted">ஒரு கடைக்கு அந்த நாளில் மீண்டும் பதிவு செய்தால், பழைய பதிவை மாற்றி சேமிக்கும்.</p>
+</div>
+<div class="card"><h2>இன்றைய மொத்த விற்பனை</h2><div class="stats">
+<div class="stat"><b id="todayAmount">₹0</b><span>மொத்த தொகை</span></div>
+<div class="stat"><b id="todayPackets">0</b><span>மொத்த பாக்கெட்டுகள் / அளவுகள்</span></div>
+<div class="stat"><b id="todayShops">0 / 15</b><span>விற்பனை செய்த கடைகள்</span></div>
+</div></div>
+</section>
+
+<section id="report" class="hidden">
+<div class="card">
+<h2>📅 மாத காலண்டர் & அறிக்கை</h2>
+<div class="row">
+<div class="field"><label>மாதம்</label><input type="month" id="month"></div>
+<div class="field"><label>அறிக்கை வகை</label><select id="period"><option value="month">மாத மொத்தம்</option><option value="week1">வாரம் 1 (1–7)</option><option value="week2">வாரம் 2 (8–14)</option><option value="week3">வாரம் 3 (15–21)</option><option value="week4">வாரம் 4 (22–28)</option><option value="week5">வாரம் 5 (29–31)</option></select></div>
+</div>
+<div class="calendar" id="calendar" style="margin-top:12px"></div>
+<div class="stats" style="margin-top:12px">
+<div class="stat"><b id="periodAmount">₹0</b><span>மொத்த விற்பனை</span></div>
+<div class="stat"><b id="periodQty">0</b><span>மொத்த அளவு</span></div>
+<div class="stat"><b id="periodShopDays">0</b><span>கடை-நாட்கள்</span></div>
+</div>
+</div>
+<div class="card"><h2>கடை வாரியான தொகை</h2><div style="overflow:auto"><table><thead><tr><th>கடை</th><th>அளவு</th><th>தொகை (₹)</th></tr></thead><tbody id="reportRows"></tbody></table></div></div>
+<div class="card" id="analysisCard">
+<h2>📈 விரிவான Analysis & PDF Print</h2>
+<p class="muted">ஒரு கடையைத் தேர்ந்தெடுக்கலாம் அல்லது எல்லா கடைகளையும் சேர்த்து அறிக்கை எடுக்கலாம்.</p>
+<div class="row">
+ <div class="field"><label>அறிக்கை காலம்</label><select id="analysisType"><option value="daily">Daily Report – தினசரி</option><option value="weekly">Weekly Report – வாராந்திரம்</option><option value="monthly">Monthly Report – மாதாந்திரம்</option></select></div>
+ <div class="field"><label>தேதி / மாதம்</label><input type="date" id="analysisDate"></div>
+ <div class="field"><label>கடை தேர்வு</label><select id="analysisShop"><option value="all">எல்லா கடைகளும்</option></select></div>
+</div>
+<div class="row" style="margin-top:10px"><button class="primary" id="runAnalysis">📊 Analysis பார்க்க</button><button class="secondary" id="printAnalysis">🖨️ PDF / Print</button></div>
+<div id="analysisOutput" style="margin-top:14px"></div>
+</div>
+</section>
+
+<section id="shops" class="hidden">
+<div class="card"><h2>🏪 கடைகள் & கணக்கு</h2><p class="muted">புதிய கடைகளை வரம்பில்லாமல் சேர்க்கலாம். கடையின் பெயரைத் தொட்டால் அதன் விற்பனை, பணம் வசூல், பழைய பாக்கி விவரம் திறக்கும்.</p>
+<div class="row"><div class="field"><label>புதிய கடை பெயர்</label><input id="newShopName" placeholder="உதா: முருகன் மளிகை"></div><button class="primary" id="addShopBtn">＋ கடை சேர்க்க</button></div>
+<div class="shopgrid" id="shopNames" style="margin-top:12px"></div></div>
+<div class="card hidden" id="shopDetail"><h2 id="detailTitle">கடை விவரம்</h2><button class="secondary" id="closeDetail">← கடைகள் பட்டியல்</button>
+<div class="stats" style="margin-top:12px"><div class="stat"><b id="detailTodaySales">₹0</b><span>இன்றைய விற்பனை</span></div><div class="stat"><b id="detailTodayPaid">₹0</b><span>இன்று வசூல்</span></div><div class="stat"><b id="detailOldBalance">₹0</b><span>இன்றைக்கு முன் பாக்கி</span></div></div>
+<div class="stat" style="margin-top:8px"><b id="detailCurrentBalance">₹0</b><span>தற்போதைய மொத்த பாக்கி (விற்பனை − வசூல் + பழைய பாக்கி)</span></div>
+<h3>💰 பணம் வசூல் பதிவு</h3><div class="row"><div class="field"><label>தேதி</label><input type="date" id="payDate"></div><div class="field"><label>பணம் கொடுத்தவர் பெயர்</label><input id="payerName" placeholder="கடை உரிமையாளர்"></div><div class="field"><label>வசூல் தொகை (₹)</label><input type="number" min="0" step=".01" id="paymentAmount" placeholder="0"></div><button class="primary" id="savePayment">வசூலை சேமிக்க</button></div>
+<h3>📋 இந்த கடையின் பணப் பரிவர்த்தனை</h3><div style="overflow:auto"><table><thead><tr><th>தேதி</th><th>விவரம்</th><th>விற்பனை</th><th>வசூல்</th><th>பாக்கி</th></tr></thead><tbody id="shopLedger"></tbody></table></div></div>
+</section>
+
+<section id="settings" class="hidden">
+<div class="card"><h2>⚙️ பால் வகை & விலை</h2><p class="muted">உங்கள் உண்மையான பெயர் மற்றும் விலைகளை உள்ளிடுங்கள்.</p><div id="productSettings"></div><button class="primary" id="savePrices" style="margin-top:12px">விலைகளை சேமிக்கவும்</button></div>
+<div class="card"><h2>தரவு பாதுகாப்பு</h2><p class="muted">இந்த ஆப் தரவை இந்த மொபைல் / browser-ல் சேமிக்கும். வாரம் ஒருமுறை backup எடுக்கவும்.</p><div class="row"><button class="secondary" id="exportBtn">⬇️ Excel-க்கு ஏற்ற CSV பதிவிறக்கம்</button><button class="secondary danger" id="clearBtn">அனைத்து பதிவுகளையும் நீக்கு</button></div></div>
+</section>
+</main>
+<script>
+const defaultProducts=[{name:"சிறிய பாக்கெட்",price:9},{name:"அரை லிட்டர்",price:25},{name:"ஒரு லிட்டர்",price:48}];
+const today=new Date(); const dateStr=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+let data=JSON.parse(localStorage.getItem("milkSalesData")||"{}");
+data.shops=data.shops||Array.from({length:15},(_,i)=>`கடை ${i+1}`); data.payments=data.payments||{}; data.openingBalances=data.openingBalances||{};
+data.products=data.products||defaultProducts;
+data.records=data.records||{};
+const saveData=()=>localStorage.setItem("milkSalesData",JSON.stringify(data));
+document.getElementById("date").value=dateStr(today);
+document.getElementById("month").value=dateStr(today).slice(0,7);
+function shopOptions(){let s=document.getElementById("shopSelect");s.innerHTML=data.shops.map((n,i)=>`<option value="${i}">${esc(n)}</option>`).join("");}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+function renderProductRows(){
+ const body=document.getElementById("productRows");body.innerHTML=data.products.map((p,i)=>`<tr><td>${esc(p.name)}</td><td>₹${Number(p.price)||0}</td><td><input class="qty" type="number" min="0" step="1" id="qty${i}" value="0"></td><td id="sum${i}">₹0</td></tr>`).join("");
+ data.products.forEach((p,i)=>document.getElementById("qty"+i).addEventListener("input",calcEntry));calcEntry();
+}
+function key(){return document.getElementById("date").value+"_"+document.getElementById("shopSelect").value;}
+function calcEntry(){let total=0;data.products.forEach((p,i)=>{let q=Number(document.getElementById("qty"+i).value)||0;let v=q*(Number(p.price)||0);total+=v;document.getElementById("sum"+i).textContent="₹"+v.toFixed(2)});document.getElementById("entryTotal").textContent="₹"+total.toFixed(2);}
+function loadRecord(){let r=data.records[key()]||{};data.products.forEach((p,i)=>document.getElementById("qty"+i).value=r.qty?.[i]||0);calcEntry();}
+function saveRecord(){let qty=data.products.map((p,i)=>Number(document.getElementById("qty"+i).value)||0);data.records[key()]={qty};saveData();refreshToday();renderReport();alert("பதிவு சேமிக்கப்பட்டது!");}
+function calcRecord(r){let q=r?.qty||[];let amount=0,units=0;data.products.forEach((p,i)=>{let n=Number(q[i])||0;units+=n;amount+=n*(Number(p.price)||0)});return {amount,units};}
+function refreshToday(){let d=document.getElementById("date").value;let amt=0,units=0,shops=0;Object.entries(data.records).forEach(([k,r])=>{if(k.startsWith(d+"_")){let x=calcRecord(r);amt+=x.amount;units+=x.units;if(x.units>0)shops++}});document.getElementById("todayAmount").textContent="₹"+amt.toFixed(2);document.getElementById("todayPackets").textContent=units;document.getElementById("todayShops").textContent=shops+" / "+data.shops.length;}
+function renderShops(){
+ document.getElementById("shopNames").innerHTML=data.shops.map((n,i)=>{let bal=shopBalance(i,dateStr(today));return `<div class="shop"><button class="secondary full" data-open-shop="${i}" style="text-align:left"><strong>${esc(n||`கடை ${i+1}`)}</strong><small>மொத்த பாக்கி: ₹${bal.toFixed(2)} · விவரம் பார்க்க →</small></button><div style="margin-top:6px"><label>கடை பெயர்</label><input data-shop="${i}" value="${esc(n)}"></div><button class="secondary danger" data-del-shop="${i}" style="margin-top:6px">கடையை நீக்கு</button></div>`}).join("");
+ document.querySelectorAll("[data-shop]").forEach(inp=>inp.addEventListener("change",()=>{data.shops[+inp.dataset.shop]=inp.value.trim()||`கடை ${+inp.dataset.shop+1}`;saveData();shopOptions();renderShops();renderReport();}));
+ document.querySelectorAll("[data-open-shop]").forEach(b=>b.addEventListener("click",()=>showShopDetail(+b.dataset.openShop)));
+ document.querySelectorAll("[data-del-shop]").forEach(b=>b.addEventListener("click",()=>{let i=+b.dataset.delShop;if(confirm(`"${data.shops[i]}" கடையை நீக்கவா? அதற்கான பதிவுகளும் நீக்கப்படும்.`)){data.shops.splice(i,1);let rec={};Object.entries(data.records).forEach(([k,v])=>{let si=+k.split("_")[1];if(si<i)rec[k]=v;else if(si>i)rec[k.slice(0,10)+"_"+(si-1)]=v;});data.records=rec;let pay={};Object.entries(data.payments).forEach(([k,v])=>{let si=+k.split("_")[1];if(si<i)pay[k]=v;else if(si>i)pay[k.slice(0,10)+"_"+(si-1)]=v;});data.payments=pay;saveData();shopOptions();renderShops();fillAnalysisShops();refreshToday();renderReport();runAnalysis();}}));
+}
+function shopSales(si,untilDate){let total=0;Object.entries(data.records).forEach(([k,r])=>{let ds=k.slice(0,10),idx=+k.split("_")[1];if(idx===si&&ds<=untilDate)total+=calcRecord(r).amount;});return total;}
+function shopPaid(si,untilDate){let total=0;Object.entries(data.payments).forEach(([k,p])=>{let ds=k.slice(0,10),idx=+k.split("_")[1];if(idx===si&&ds<=untilDate)total+=(Number(p.amount)||0);});return total;}
+function shopBalance(si,untilDate){return (Number(data.openingBalances[si])||0)+shopSales(si,untilDate)-shopPaid(si,untilDate);}
+function showShopDetail(si){document.getElementById("shopDetail").classList.remove("hidden");document.getElementById("detailTitle").textContent="🏪 "+data.shops[si]+" — கணக்கு";document.getElementById("shopDetail").dataset.shop=si;document.getElementById("payDate").value=document.getElementById("date").value||dateStr(today);renderShopLedger(si);}
+function renderShopLedger(si){let chosen=document.getElementById("payDate").value||dateStr(today),todaySales=calcRecord(data.records[chosen+"_"+si]).amount;
+let beforeDate=new Date(chosen);beforeDate.setDate(beforeDate.getDate()-1);let prior=dateStr(beforeDate);let oldBal=shopBalance(si,prior);let paidToday=Number(data.payments[chosen+"_"+si]?.amount)||0;let curr=shopBalance(si,chosen);
+document.getElementById("detailTodaySales").textContent="₹"+todaySales.toFixed(2);document.getElementById("detailTodayPaid").textContent="₹"+paidToday.toFixed(2);document.getElementById("detailOldBalance").textContent="₹"+oldBal.toFixed(2);document.getElementById("detailCurrentBalance").textContent="₹"+curr.toFixed(2);
+let dates=new Set();Object.keys(data.records).forEach(k=>{if(+k.split("_")[1]===si)dates.add(k.slice(0,10));});Object.keys(data.payments).forEach(k=>{if(+k.split("_")[1]===si)dates.add(k.slice(0,10));});let sorted=[...dates].sort().reverse();document.getElementById("shopLedger").innerHTML=sorted.map(ds=>{let sales=calcRecord(data.records[ds+"_"+si]).amount,p=data.payments[ds+"_"+si],paid=Number(p?.amount)||0,b=shopBalance(si,ds);return `<tr><td>${ds}</td><td>${sales>0?"பால் விற்பனை":"வசூல்: "+esc(p?.payer||"பெயர் இல்லை")}</td><td>₹${sales.toFixed(2)}</td><td>₹${paid.toFixed(2)}<br><small>${esc(p?.payer||"")}</small></td><td class="total">₹${b.toFixed(2)}</td></tr>`}).join("")||`<tr><td colspan="5">பதிவுகள் இல்லை</td></tr>`;
+}
+function renderSettings(){document.getElementById("productSettings").innerHTML=data.products.map((p,i)=>`<div class="row" style="margin-bottom:10px"><div class="field"><label>பால் வகை ${i+1}</label><input data-pname="${i}" value="${esc(p.name)}"></div><div class="field"><label>விலை (₹)</label><input data-pprice="${i}" type="number" min="0" step=".5" value="${p.price}"></div></div>`).join("");}
+function savePrices(){data.products.forEach((p,i)=>{p.name=document.querySelector(`[data-pname="${i}"]`).value||`பால் ${i+1}`;p.price=Number(document.querySelector(`[data-pprice="${i}"]`).value)||0});saveData();renderProductRows();renderSettings();refreshToday();renderReport();alert("பால் விலை சேமிக்கப்பட்டது!");}
+function renderCalendar(){
+ let m=document.getElementById("month").value;if(!m)return;let [y,mo]=m.split("-").map(Number),first=new Date(y,mo-1,1).getDay(),days=new Date(y,mo,0).getDate();
+ let names=["ஞா","தி","செ","பு","வி","வெ","ச"];let html=names.map(n=>`<div class="dayname">${n}</div>`).join("");
+ for(let i=0;i<first;i++)html+=`<div></div>`;
+ for(let d=1;d<=days;d++){let ds=`${y}-${String(mo).padStart(2,"0")}-${String(d).padStart(2,"0")}`,has=Object.keys(data.records).some(k=>k.startsWith(ds+"_")&&calcRecord(data.records[k]).units>0);html+=`<button class="day ${ds===document.getElementById("date").value?"selected ":""}${has?"hasdata":""}" data-day="${ds}">${d}</button>`;}
+ document.getElementById("calendar").innerHTML=html;
+ document.querySelectorAll("[data-day]").forEach(b=>b.addEventListener("click",()=>{document.getElementById("date").value=b.dataset.day;document.querySelector('[data-tab="entry"]').click();loadRecord();refreshToday();}));
+}
+function renderReport(){
+ let m=document.getElementById("month").value;if(!m)return;let period=document.getElementById("period").value;
+ let [y,mo]=m.split("-").map(Number),days=new Date(y,mo,0).getDate(),start=1,end=days;
+ if(period.startsWith("week")){let w=+period.slice(4);start=(w-1)*7+1;end=Math.min(w*7,days);}
+ let totals=data.shops.map((s,i)=>({name:s,qty:0,amount:0,days:0}));
+ let allAmt=0,allQty=0,shopDays=0;
+ Object.entries(data.records).forEach(([k,r])=>{let [ds,si]=[k.slice(0,10),+k.split("_")[1]],dt=+ds.slice(8,10);if(ds.startsWith(m)&&dt>=start&&dt<=end){let x=calcRecord(r);allAmt+=x.amount;allQty+=x.units;if(x.units>0){shopDays++;totals[si].days++;}totals[si].amount+=x.amount;totals[si].qty+=x.units;}});
+ document.getElementById("periodAmount").textContent="₹"+allAmt.toFixed(2);document.getElementById("periodQty").textContent=allQty;document.getElementById("periodShopDays").textContent=shopDays;
+ document.getElementById("reportRows").innerHTML=totals.filter(x=>x.qty||x.amount).map(x=>`<tr><td>${esc(x.name)}</td><td>${x.qty}</td><td>₹${x.amount.toFixed(2)}</td></tr>`).join("")||`<tr><td colspan="3" style="text-align:center">இன்னும் பதிவு இல்லை</td></tr>`;
+ renderCalendar();
+}
+function fillAnalysisShops(){let el=document.getElementById("analysisShop");let v=el.value||"all";el.innerHTML='<option value="all">எல்லா கடைகளும்</option>'+data.shops.map((n,i)=>`<option value="${i}">${esc(n)}</option>`).join("");if(v==="all"||data.shops[+v]!==undefined)el.value=v;else el.value="all";}
+function dateRangeForAnalysis(){let type=document.getElementById("analysisType").value,ds=document.getElementById("analysisDate").value||dateStr(today);let start=ds,end=ds,title=ds;
+ if(type==="weekly"){let d=new Date(ds+"T12:00:00"),day=(d.getDay()+6)%7;d.setDate(d.getDate()-day);start=dateStr(d);d.setDate(d.getDate()+6);end=dateStr(d);title=`${start} முதல் ${end} வரை`;}
+ if(type==="monthly"){start=ds.slice(0,7)+"-01";let [y,m]=ds.slice(0,7).split("-").map(Number);end=dateStr(new Date(y,m,0));title=ds.slice(0,7);}
+ return {start,end,title,type};}
+function runAnalysis(){fillAnalysisShops();let {start,end,title,type}=dateRangeForAnalysis();let chosen=document.getElementById("analysisShop").value;let indices=chosen==="all"?data.shops.map((_,i)=>i):[+chosen];let rows=[],grand={qty:0,sales:0,paid:0,opening:0,closing:0};
+ indices.forEach(si=>{let sales=0,qty=0,paid=0,prodQty=data.products.map(()=>0);Object.entries(data.records).forEach(([k,r])=>{let d=k.slice(0,10),idx=+k.split("_")[1];if(idx===si&&d>=start&&d<=end){let x=calcRecord(r);sales+=x.amount;qty+=x.units;(r.qty||[]).forEach((q,i)=>prodQty[i]=(prodQty[i]||0)+(Number(q)||0));}});Object.entries(data.payments).forEach(([k,v])=>{let d=k.slice(0,10),idx=+k.split("_")[1];if(idx===si&&d>=start&&d<=end)paid+=Number(v.amount)||0;});let before=new Date(start+"T12:00:00");before.setDate(before.getDate()-1);let opening=shopBalance(si,dateStr(before));let closing=shopBalance(si,end);rows.push({name:data.shops[si],qty,sales,paid,opening,closing,prodQty});grand.qty+=qty;grand.sales+=sales;grand.paid+=paid;grand.opening+=opening;grand.closing+=closing;});
+ let productHeader=data.products.map(p=>`<th>${esc(p.name)} அளவு</th>`).join("");let html=`<div class="print-title" style="display:none"><h2>VENGADESH MILK SALES – ${type.toUpperCase()} REPORT</h2><p>காலம்: ${title} | ${chosen==="all"?"எல்லா கடைகளும்":esc(data.shops[+chosen])}</p></div><h3>${type==="daily"?"தினசரி":type==="weekly"?"வாராந்திர":"மாதாந்திர"} அறிக்கை: ${title}</h3><div class="stats"><div class="stat"><b>₹${grand.sales.toFixed(2)}</b><span>மொத்த விற்பனை</span></div><div class="stat"><b>₹${grand.paid.toFixed(2)}</b><span>இந்த கால வசூல்</span></div><div class="stat"><b>₹${grand.closing.toFixed(2)}</b><span>கால முடிவு பாக்கி</span></div><div class="stat"><b>${grand.qty}</b><span>மொத்த பால் அளவு</span></div><div class="stat"><b>₹${grand.opening.toFixed(2)}</b><span>தொடக்க பாக்கி</span></div><div class="stat"><b>${rows.length}</b><span>கடைகள்</span></div></div><div style="overflow:auto;margin-top:12px"><table><thead><tr><th>கடை பெயர்</th>${productHeader}<th>மொத்த அளவு</th><th>விற்பனை ₹</th><th>வசூல் ₹</th><th>தொடக்க பாக்கி ₹</th><th>முடிவு பாக்கி ₹</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${esc(r.name)}</td>${r.prodQty.map(q=>`<td>${q||0}</td>`).join("")}<td>${r.qty}</td><td>₹${r.sales.toFixed(2)}</td><td>₹${r.paid.toFixed(2)}</td><td>₹${r.opening.toFixed(2)}</td><td>₹${r.closing.toFixed(2)}</td></tr>`).join("")}</tbody><tfoot><tr><th>மொத்தம்</th>${data.products.map((p,i)=>`<th>${rows.reduce((a,r)=>a+(r.prodQty[i]||0),0)}</th>`).join("")}<th>${grand.qty}</th><th>₹${grand.sales.toFixed(2)}</th><th>₹${grand.paid.toFixed(2)}</th><th>₹${grand.opening.toFixed(2)}</th><th>₹${grand.closing.toFixed(2)}</th></tr></tfoot></table></div><p class="muted">குறிப்பு: தொடக்க பாக்கி = தேர்ந்தெடுத்த காலத்திற்கு முந்தைய நாள் நிலுவை. முடிவு பாக்கி = காலம் முடியும் நாளின் மொத்த நிலுவை.</p>`;
+ document.getElementById("analysisOutput").innerHTML=html;}
+document.getElementById("addShopBtn").addEventListener("click",()=>{let n=document.getElementById("newShopName").value.trim();if(!n){alert("கடை பெயரை உள்ளிடுங்கள்");return;}data.shops.push(n);document.getElementById("newShopName").value="";saveData();shopOptions();renderShops();fillAnalysisShops();runAnalysis();});
+document.getElementById("closeDetail").addEventListener("click",()=>document.getElementById("shopDetail").classList.add("hidden"));
+document.getElementById("payDate").addEventListener("change",()=>{let si=+document.getElementById("shopDetail").dataset.shop;renderShopLedger(si);});
+document.getElementById("savePayment").addEventListener("click",()=>{let si=+document.getElementById("shopDetail").dataset.shop,ds=document.getElementById("payDate").value,amount=Number(document.getElementById("paymentAmount").value)||0,payer=document.getElementById("payerName").value.trim();if(!ds||amount<=0){alert("தேதி மற்றும் வசூல் தொகையை சரியாக உள்ளிடுங்கள்");return;}data.payments[ds+"_"+si]={amount,payer};saveData();document.getElementById("paymentAmount").value="";document.getElementById("payerName").value="";renderShopLedger(si);renderShops();alert("வசூல் பதிவு சேமிக்கப்பட்டது!");});
+document.querySelectorAll(".tabs button").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll(".tabs button").forEach(x=>x.classList.remove("active"));b.classList.add("active");["entry","report","shops","settings"].forEach(id=>document.getElementById(id).classList.toggle("hidden",id!==b.dataset.tab));if(b.dataset.tab==="report")renderReport();}));
+document.getElementById("shopSelect").addEventListener("change",loadRecord);
+document.getElementById("date").addEventListener("change",()=>{loadRecord();refreshToday();renderCalendar();});
+document.getElementById("month").addEventListener("change",renderReport);
+document.getElementById("analysisDate").value=dateStr(today);
+document.getElementById("runAnalysis").addEventListener("click",runAnalysis);
+document.getElementById("printAnalysis").addEventListener("click",()=>{if(!document.getElementById("analysisOutput").innerHTML)runAnalysis();window.print();});
+document.getElementById("analysisType").addEventListener("change",runAnalysis);
+document.getElementById("analysisDate").addEventListener("change",runAnalysis);
+document.getElementById("analysisShop").addEventListener("change",runAnalysis);
+document.getElementById("period").addEventListener("change",renderReport);
+document.getElementById("saveBtn").addEventListener("click",saveRecord);
+document.getElementById("savePrices").addEventListener("click",savePrices);
+document.getElementById("exportBtn").addEventListener("click",()=>{let rows=[["Date","Shop","Product","Price","Qty","Amount","Payment","Payer","Balance"]];Object.entries(data.records).forEach(([k,r])=>{let [d,si]=[k.slice(0,10),+k.split("_")[1]];data.products.forEach((p,i)=>{let q=+r.qty[i]||0;rows.push([d,data.shops[si],p.name,p.price,q,q*p.price,(data.payments[d+"_"+si]?.amount)||0,(data.payments[d+"_"+si]?.payer)||"",shopBalance(si,d)])})});let csv="\uFEFF"+rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(",")).join("\r\n");let a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));a.download="milk-sales.csv";a.click();});
+document.getElementById("clearBtn").addEventListener("click",()=>{if(confirm("உறுதியாக எல்லா தினசரி பதிவுகளையும் நீக்க வேண்டுமா?")){data.records={};saveData();refreshToday();renderReport();}});
+shopOptions();renderProductRows();renderShops();renderSettings();fillAnalysisShops();loadRecord();refreshToday();renderReport();runAnalysis();
+</script>
+<script>
+let deferredInstallPrompt = null;
+const installBanner = document.getElementById('installBanner');
+const installBtn = document.getElementById('installBtn');
+window.addEventListener('beforeinstallprompt', (event) => {
+  event.preventDefault();
+  deferredInstallPrompt = event;
+  if (installBanner) installBanner.classList.remove('hidden');
+});
+if (installBtn) installBtn.addEventListener('click', async () => {
+  if (!deferredInstallPrompt) { alert('Chrome இன்னும் Install அனுமதி தரவில்லை. Chrome-ஐ மூடி மீண்டும் திறந்து முயற்சிக்கவும்.'); return; }
+  deferredInstallPrompt.prompt();
+  await deferredInstallPrompt.userChoice;
+  deferredInstallPrompt = null;
+  installBanner.classList.add('hidden');
+});
+window.addEventListener('appinstalled', () => { if (installBanner) installBanner.classList.add('hidden'); });
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js', {scope:'/'}).catch((err) => console.error('Service worker registration failed', err)));
+}
+</script>
+</body></html>
